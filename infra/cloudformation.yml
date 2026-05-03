@@ -1,0 +1,185 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Kotwal marketing website — private S3 bucket fronted by CloudFront with
+  Origin Access Control (OAC), SPA error fallback, and a scoped IAM user
+  for the GitHub Actions deployer. ACM cert is supplied as a parameter
+  and must already exist in us-east-1.
+
+Parameters:
+  DomainName:
+    Type: String
+    Default: kotwal.cloudsaathi.com
+    Description: Custom domain (CNAME on GoDaddy → CloudFront distribution).
+
+  CertificateArn:
+    Type: String
+    Description: ARN of an ACM cert in us-east-1 covering DomainName.
+    AllowedPattern: "^arn:aws:acm:us-east-1:[0-9]{12}:certificate/.+$"
+
+Resources:
+  # ─── S3 bucket — private, OAC-only access ──────────────────────────
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "kotwal-website-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireOldVersions
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 30
+
+  # ─── CloudFront Origin Access Control (replaces legacy OAI) ────────
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "kotwal-website-oac-${AWS::StackName}"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # ─── CloudFront distribution ───────────────────────────────────────
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: Kotwal marketing website
+        DefaultRootObject: index.html
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        PriceClass: PriceClass_100
+        Aliases:
+          - !Ref DomainName
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CertificateArn
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt WebsiteBucket.RegionalDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+            OriginAccessControlId: !GetAtt OriginAccessControl.Id
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          # Managed-CachingOptimized
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          # Managed-CORS-S3Origin
+          OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf
+          # Managed-SecurityHeadersPolicy
+          ResponseHeadersPolicyId: 67f7725c-6f97-4210-82d7-5512b31e9d03
+        # SPA fallback — any 403/404 from S3 returns index.html with HTTP 200
+        # so client-side router can resolve the path. Cached for 10s only so
+        # real 404s resolve quickly after a deploy.
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 10
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 10
+
+  # ─── Bucket policy — only this distribution can read ───────────────
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowCloudFrontReadOnly
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${WebsiteBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}"
+
+  # ─── Scoped IAM user for GitHub Actions deployer ───────────────────
+  DeployUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: !Sub "kotwal-website-deployer-${AWS::StackName}"
+      Policies:
+        - PolicyName: deploy-permissions
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: S3SyncOnBucket
+                Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetBucketLocation
+                Resource: !GetAtt WebsiteBucket.Arn
+              - Sid: S3WriteObjects
+                Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:GetObject
+                  - s3:GetObjectAcl
+                  - s3:PutObjectAcl
+                Resource: !Sub "${WebsiteBucket.Arn}/*"
+              - Sid: CloudFrontInvalidate
+                Effect: Allow
+                Action: cloudfront:CreateInvalidation
+                Resource: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}"
+
+  DeployUserKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref DeployUser
+
+  # ─── Stash the deployer key in Secrets Manager ─────────────────────
+  # Avoids printing the secret in CloudFormation outputs / workflow logs.
+  DeployerCredentialsSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "kotwal-website/deployer-credentials"
+      Description: GitHub Actions deployer credentials for the kotwal-website stack.
+      SecretString: !Sub |
+        {
+          "AccessKeyId": "${DeployUserKey}",
+          "SecretAccessKey": "${DeployUserKey.SecretAccessKey}"
+        }
+
+Outputs:
+  BucketName:
+    Description: S3 bucket holding the built site (set as GitHub secret AWS_S3_BUCKET).
+    Value: !Ref WebsiteBucket
+
+  DistributionId:
+    Description: CloudFront distribution ID (set as GitHub secret CLOUDFRONT_DISTRIBUTION_ID).
+    Value: !Ref Distribution
+
+  DistributionDomain:
+    Description: CloudFront default domain — point GoDaddy CNAME for kotwal.cloudsaathi.com here.
+    Value: !GetAtt Distribution.DomainName
+
+  DeployerSecretName:
+    Description: Secrets Manager name holding the scoped deployer access key/secret.
+    Value: !Ref DeployerCredentialsSecret
+
+  RetrieveDeployerKeysCommand:
+    Description: One-liner to fetch the deployer access key + secret.
+    Value: !Sub "aws secretsmanager get-secret-value --secret-id ${DeployerCredentialsSecret} --region ${AWS::Region} --query SecretString --output text"

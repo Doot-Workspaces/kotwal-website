@@ -30,3 +30,8 @@ a { color: inherit; }
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
+
+/* Native FAQ disclosure — kill default arrow, rotate the + on open */
+.faq-row > summary::-webkit-details-marker { display: none; }
+.faq-row > summary::marker { content: ""; }
+.faq-row[open] .faq-icon { transform: rotate(45deg); }

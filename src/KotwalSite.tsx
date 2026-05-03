@@ -302,6 +302,7 @@ function Nav() {
   }, []);
   return (
     <nav
+      aria-label="Primary"
       style={{
         position: "fixed",
         top: 0,
@@ -925,7 +926,8 @@ function AgentCard({
 }) {
   const [h, setH] = useState(false);
   return (
-    <div
+    <article
+      aria-labelledby={`agent-${en.toLowerCase()}-name`}
       onMouseEnter={() => setH(true)}
       onMouseLeave={() => setH(false)}
       style={{
@@ -964,6 +966,7 @@ function AgentCard({
         </span>
       </div>
       <h3
+        id={`agent-${en.toLowerCase()}-name`}
         style={{
           fontFamily: F.d,
           fontSize: 24,
@@ -975,6 +978,7 @@ function AgentCard({
         {en}
       </h3>
       <p
+        lang="hi"
         style={{
           fontFamily: F.dv,
           fontSize: 14,
@@ -998,7 +1002,7 @@ function AgentCard({
       >
         {body}
       </p>
-    </div>
+    </article>
   );
 }
 
@@ -1455,22 +1459,26 @@ function FAQ() {
 }
 
 function FAQRow({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
+  // Native HTML5 disclosure widget — keyboard accessible, screen-reader
+  // friendly, no JS state needed. The `+` icon rotates via the
+  // `details[open]` CSS attribute selector in index.css.
   return (
-    <div
+    <details
+      className="faq-row"
       style={{
         borderBottom: `1px solid ${C.bdr}`,
         padding: "20px 0",
-        cursor: "pointer",
       }}
-      onClick={() => setOpen(!open)}
     >
-      <div
+      <summary
         style={{
+          listStyle: "none",
+          cursor: "pointer",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           gap: 24,
+          outline: "none",
         }}
       >
         <h3
@@ -1485,39 +1493,32 @@ function FAQRow({ q, a }: { q: string; a: string }) {
           {q}
         </h3>
         <span
+          className="faq-icon"
+          aria-hidden="true"
           style={{
             fontFamily: F.m,
             fontSize: 18,
             color: C.maroon,
             transition: "transform 0.3s",
-            transform: open ? "rotate(45deg)" : "rotate(0deg)",
+            display: "inline-block",
           }}
         >
           +
         </span>
-      </div>
-      <div
+      </summary>
+      <p
         style={{
-          maxHeight: open ? 200 : 0,
-          overflow: "hidden",
-          transition: "max-height 0.4s ease, margin-top 0.4s ease",
-          marginTop: open ? 14 : 0,
+          fontFamily: F.b,
+          fontSize: 14.5,
+          color: C.inkS,
+          fontWeight: 300,
+          lineHeight: 1.7,
+          margin: "14px 0 0",
         }}
       >
-        <p
-          style={{
-            fontFamily: F.b,
-            fontSize: 14.5,
-            color: C.inkS,
-            fontWeight: 300,
-            lineHeight: 1.7,
-            margin: 0,
-          }}
-        >
-          {a}
-        </p>
-      </div>
-    </div>
+        {a}
+      </p>
+    </details>
   );
 }
 

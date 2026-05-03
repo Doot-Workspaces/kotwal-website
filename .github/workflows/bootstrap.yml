@@ -36,8 +36,11 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          # CloudFront + the supplied ACM cert are us-east-1.
-          aws-region: us-east-1
+          # Stack region. CloudFront is global; the ACM cert lives in
+          # us-east-1 (mandatory for CloudFront) and is referenced by
+          # full ARN, so the rest of the stack — S3, IAM, Secrets
+          # Manager — sits in ap-south-1.
+          aws-region: ap-south-1
 
       - name: Validate template
         run: aws cloudformation validate-template --template-body file://infra/cloudformation.yml
@@ -120,7 +123,7 @@ jobs:
             echo "**2.** Retrieve the scoped deployer access key + secret from AWS Secrets Manager and rotate the GitHub secrets to least-privilege:"
             echo ""
             echo '```'
-            echo "aws secretsmanager get-secret-value --secret-id '${{ steps.outputs.outputs.secret }}' --region us-east-1 --query SecretString --output text"
+            echo "aws secretsmanager get-secret-value --secret-id '${{ steps.outputs.outputs.secret }}' --region ap-south-1 --query SecretString --output text"
             echo '```'
             echo ""
             echo "Then:"

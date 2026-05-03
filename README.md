@@ -37,7 +37,41 @@ The styling is intentionally inline-style React (not Tailwind classes) to match 
 
 ## Deploy
 
-Vercel — separate project from `cloudsaathi-main-website`. Domain: `kotwal.cloudsaathi.com` via DNS CNAME.
+S3 + CloudFront, provisioned by CloudFormation (`infra/cloudformation.yml`).
+DNS for `kotwal.cloudsaathi.com` is a GoDaddy CNAME pointing at the
+CloudFront distribution domain.
+
+### One-time bootstrap
+
+1. Set repo secrets `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY` to a
+   user with permissions to create S3 buckets, CloudFront distributions,
+   IAM users, and Secrets Manager secrets.
+2. Trigger **Bootstrap AWS infra (one-time)** via the Actions tab —
+   workflow_dispatch only. It deploys the CloudFormation stack and prints
+   the bucket name, distribution ID, distribution domain, and the
+   Secrets Manager name holding the scoped deployer credentials.
+3. Follow the workflow summary's next-steps:
+   - Set `AWS_S3_BUCKET` + `CLOUDFRONT_DISTRIBUTION_ID` GitHub secrets.
+   - Retrieve scoped deployer keys from Secrets Manager and rotate
+     `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` to those values.
+   - Add a GoDaddy CNAME for `kotwal.cloudsaathi.com` →
+     `<distribution>.cloudfront.net`.
+4. Push any commit to `main` — `Build & Deploy to S3` workflow ships the site.
+
+### What CloudFormation creates
+
+| Resource | Purpose |
+|---|---|
+| Private S3 bucket (versioning on, 30-day noncurrent expiration) | Static site hosting |
+| CloudFront distribution with Origin Access Control (OAC) | HTTPS edge, custom domain, SPA fallback |
+| Bucket policy | Locks read access to this distribution only |
+| Scoped IAM user | Used by `deploy.yml` — only `s3:Sync` + `cloudfront:CreateInvalidation` on these resources |
+| Secrets Manager entry | Holds the scoped IAM user's access key + secret |
+
+The CloudFront distribution uses managed cache + origin-request +
+security-headers policies and falls back to `/index.html` on 403/404
+so client-side router routes resolve correctly (10-second cache TTL on
+the fallback so real 404s recover quickly).
 
 ## Sections
 

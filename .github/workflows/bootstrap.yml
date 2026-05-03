@@ -1,0 +1,136 @@
+name: Bootstrap AWS infra (one-time)
+
+# Manual trigger only. Provisions S3 + CloudFront + scoped IAM deployer
+# from infra/cloudformation.yml. Idempotent — safe to re-run for updates.
+on:
+  workflow_dispatch:
+    inputs:
+      stack_name:
+        description: CloudFormation stack name
+        required: true
+        default: kotwal-website
+      domain_name:
+        description: Custom domain (must match ACM cert)
+        required: true
+        default: kotwal.cloudsaathi.com
+      certificate_arn:
+        description: ACM cert ARN (must be in us-east-1)
+        required: true
+        default: arn:aws:acm:us-east-1:967519195795:certificate/b8f4362b-9b9c-42d1-b941-b47eb6b7b42e
+
+permissions:
+  contents: read
+  # Required so the workflow can write the resulting bucket name + distribution
+  # ID back into the repo's secrets, removing one manual step.
+  id-token: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          # CloudFront + the supplied ACM cert are us-east-1.
+          aws-region: us-east-1
+
+      - name: Validate template
+        run: aws cloudformation validate-template --template-body file://infra/cloudformation.yml
+
+      - name: Deploy stack
+        run: |
+          aws cloudformation deploy \
+            --template-file infra/cloudformation.yml \
+            --stack-name "${{ inputs.stack_name }}" \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --parameter-overrides \
+              DomainName="${{ inputs.domain_name }}" \
+              CertificateArn="${{ inputs.certificate_arn }}" \
+            --no-fail-on-empty-changeset
+
+      - name: Read stack outputs
+        id: outputs
+        run: |
+          BUCKET=$(aws cloudformation describe-stacks \
+            --stack-name "${{ inputs.stack_name }}" \
+            --query "Stacks[0].Outputs[?OutputKey=='BucketName'].OutputValue" \
+            --output text)
+          DIST=$(aws cloudformation describe-stacks \
+            --stack-name "${{ inputs.stack_name }}" \
+            --query "Stacks[0].Outputs[?OutputKey=='DistributionId'].OutputValue" \
+            --output text)
+          DOMAIN=$(aws cloudformation describe-stacks \
+            --stack-name "${{ inputs.stack_name }}" \
+            --query "Stacks[0].Outputs[?OutputKey=='DistributionDomain'].OutputValue" \
+            --output text)
+          SECRET=$(aws cloudformation describe-stacks \
+            --stack-name "${{ inputs.stack_name }}" \
+            --query "Stacks[0].Outputs[?OutputKey=='DeployerSecretName'].OutputValue" \
+            --output text)
+          echo "bucket=$BUCKET" >> "$GITHUB_OUTPUT"
+          echo "dist=$DIST" >> "$GITHUB_OUTPUT"
+          echo "domain=$DOMAIN" >> "$GITHUB_OUTPUT"
+          echo "secret=$SECRET" >> "$GITHUB_OUTPUT"
+
+      - name: Write non-sensitive outputs to GitHub secrets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUCKET: ${{ steps.outputs.outputs.bucket }}
+          DIST:   ${{ steps.outputs.outputs.dist }}
+        run: |
+          # The default GITHUB_TOKEN cannot write secrets. This step is a
+          # no-op unless a PAT named ADMIN_GH_TOKEN with `secrets:write`
+          # is configured — in that case we use it. Otherwise the user
+          # sets these two secrets manually using the values printed below.
+          if [ -n "${{ secrets.ADMIN_GH_TOKEN }}" ]; then
+            export GH_TOKEN="${{ secrets.ADMIN_GH_TOKEN }}"
+            gh secret set AWS_S3_BUCKET --body "$BUCKET"
+            gh secret set CLOUDFRONT_DISTRIBUTION_ID --body "$DIST"
+            echo "::notice::AWS_S3_BUCKET and CLOUDFRONT_DISTRIBUTION_ID secrets set automatically."
+          else
+            echo "::notice::ADMIN_GH_TOKEN secret not configured — set the two GitHub secrets manually using the values in the summary."
+          fi
+
+      - name: Summary
+        run: |
+          {
+            echo "## Bootstrap complete"
+            echo ""
+            echo "| Output | Value |"
+            echo "|---|---|"
+            echo "| S3 bucket | \`${{ steps.outputs.outputs.bucket }}\` |"
+            echo "| CloudFront distribution ID | \`${{ steps.outputs.outputs.dist }}\` |"
+            echo "| CloudFront domain | \`${{ steps.outputs.outputs.domain }}\` |"
+            echo "| Deployer secret (in AWS Secrets Manager) | \`${{ steps.outputs.outputs.secret }}\` |"
+            echo ""
+            echo "### Next steps"
+            echo ""
+            echo "**1.** Set these two GitHub secrets (skip if ADMIN_GH_TOKEN was configured — already done):"
+            echo ""
+            echo '```'
+            echo "gh secret set AWS_S3_BUCKET --repo Doot-Workspaces/kotwal-website --body \"${{ steps.outputs.outputs.bucket }}\""
+            echo "gh secret set CLOUDFRONT_DISTRIBUTION_ID --repo Doot-Workspaces/kotwal-website --body \"${{ steps.outputs.outputs.dist }}\""
+            echo '```'
+            echo ""
+            echo "**2.** Retrieve the scoped deployer access key + secret from AWS Secrets Manager and rotate the GitHub secrets to least-privilege:"
+            echo ""
+            echo '```'
+            echo "aws secretsmanager get-secret-value --secret-id '${{ steps.outputs.outputs.secret }}' --region us-east-1 --query SecretString --output text"
+            echo '```'
+            echo ""
+            echo "Then:"
+            echo ""
+            echo '```'
+            echo "gh secret set AWS_ACCESS_KEY_ID --repo Doot-Workspaces/kotwal-website --body \"<AccessKeyId>\""
+            echo "gh secret set AWS_SECRET_ACCESS_KEY --repo Doot-Workspaces/kotwal-website --body \"<SecretAccessKey>\""
+            echo '```'
+            echo ""
+            echo "**3.** On GoDaddy, add a CNAME for \`${{ inputs.domain_name }}\` pointing at \`${{ steps.outputs.outputs.domain }}\`."
+            echo ""
+            echo "**4.** Push any commit to \`main\` (or run the *Build & Deploy to S3* workflow manually) — the site goes live."
+          } >> "$GITHUB_STEP_SUMMARY"

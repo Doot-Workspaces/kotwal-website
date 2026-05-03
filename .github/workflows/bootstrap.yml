@@ -17,6 +17,10 @@ on:
         description: ACM cert ARN (must be in us-east-1)
         required: true
         default: arn:aws:acm:us-east-1:967519195795:certificate/b8f4362b-9b9c-42d1-b941-b47eb6b7b42e
+      hosted_zone_id:
+        description: Route53 hosted zone ID for the parent domain
+        required: true
+        default: Z1039091328CP9KNCH1WV
 
 permissions:
   contents: read
@@ -54,6 +58,7 @@ jobs:
             --parameter-overrides \
               DomainName="${{ inputs.domain_name }}" \
               CertificateArn="${{ inputs.certificate_arn }}" \
+              HostedZoneId="${{ inputs.hosted_zone_id }}" \
             --no-fail-on-empty-changeset
 
       - name: Read stack outputs
@@ -133,7 +138,7 @@ jobs:
             echo "gh secret set AWS_SECRET_ACCESS_KEY --repo Doot-Workspaces/kotwal-website --body \"<SecretAccessKey>\""
             echo '```'
             echo ""
-            echo "**3.** On GoDaddy, add a CNAME for \`${{ inputs.domain_name }}\` pointing at \`${{ steps.outputs.outputs.domain }}\`."
+            echo "**3.** DNS — Route53 alias records (A + AAAA) for \`${{ inputs.domain_name }}\` were created automatically by this stack. Nothing to do."
             echo ""
-            echo "**4.** Push any commit to \`main\` (or run the *Build & Deploy to S3* workflow manually) — the site goes live."
+            echo "**4.** Push any commit to \`main\` (or run the *Build & Deploy to S3* workflow manually) — the site goes live at \`https://${{ inputs.domain_name }}\`."
           } >> "$GITHUB_STEP_SUMMARY"

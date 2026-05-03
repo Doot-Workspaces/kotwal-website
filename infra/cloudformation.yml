@@ -9,12 +9,16 @@ Parameters:
   DomainName:
     Type: String
     Default: kotwal.cloudsaathi.com
-    Description: Custom domain (CNAME on GoDaddy → CloudFront distribution).
+    Description: Custom domain. A + AAAA alias records will be created in HostedZoneId pointing at the CloudFront distribution.
 
   CertificateArn:
     Type: String
     Description: ARN of an ACM cert in us-east-1 covering DomainName.
     AllowedPattern: "^arn:aws:acm:us-east-1:[0-9]{12}:certificate/.+$"
+
+  HostedZoneId:
+    Type: AWS::Route53::HostedZone::Id
+    Description: Route53 hosted zone holding the parent domain (e.g. cloudsaathi.com).
 
 Resources:
   # ─── S3 bucket — private, OAC-only access ──────────────────────────
@@ -163,6 +167,31 @@ Resources:
           "SecretAccessKey": "${DeployUserKey.SecretAccessKey}"
         }
 
+  # ─── Route53 alias records (A + AAAA) ──────────────────────────────
+  # Z2FDTNDATAQYW2 is CloudFront's fixed hosted zone ID for alias targets.
+  # Alias records resolve faster than CNAMEs, are free, and work at the apex.
+  DnsAliasRecordA:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt Distribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2
+        EvaluateTargetHealth: false
+
+  DnsAliasRecordAAAA:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Type: AAAA
+      AliasTarget:
+        DNSName: !GetAtt Distribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2
+        EvaluateTargetHealth: false
+
 Outputs:
   BucketName:
     Description: S3 bucket holding the built site (set as GitHub secret AWS_S3_BUCKET).
@@ -173,8 +202,12 @@ Outputs:
     Value: !Ref Distribution
 
   DistributionDomain:
-    Description: CloudFront default domain — point GoDaddy CNAME for kotwal.cloudsaathi.com here.
+    Description: CloudFront default domain (Route53 alias points here automatically).
     Value: !GetAtt Distribution.DomainName
+
+  SiteUrl:
+    Description: Final site URL — DNS alias is created by this stack.
+    Value: !Sub "https://${DomainName}"
 
   DeployerSecretName:
     Description: Secrets Manager name holding the scoped deployer access key/secret.

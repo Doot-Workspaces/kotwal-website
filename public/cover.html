@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Kotwal · cover (1280×720)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Outfit:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; background: #d4cbbb; }
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .frame {
+    width: 1280px;
+    height: 720px;
+    position: relative;
+    overflow: hidden;
+    background: #F5F1E8;
+    box-shadow: 0 20px 60px -20px rgba(26,26,36,0.18);
+  }
+  /* Sanskrit watermark — subtle background texture */
+  .watermark {
+    position: absolute;
+    inset: 0;
+    opacity: 0.04;
+    transform: rotate(-3deg);
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .watermark .line {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    line-height: 60px;
+    white-space: nowrap;
+    color: #1A1A24;
+  }
+  /* Maroon accent strip — top */
+  .accent-top { position: absolute; top: 0; left: 0; right: 0; height: 6px; background: linear-gradient(90deg, #811622 0%, #F58634 100%); }
+  /* Top row: brand mark + URL */
+  .topbar {
+    position: absolute; top: 38px; left: 60px; right: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    z-index: 2;
+  }
+  .brand-mark { display: flex; align-items: center; gap: 10px; }
+  .brand-dot { width: 10px; height: 10px; border-radius: 50%; background: #811622; }
+  .brand-text { font-family: 'Playfair Display', Georgia, serif; font-size: 22px; color: #1A1A24; font-weight: 500; }
+  .brand-text .dv { font-family: 'Noto Sans Devanagari', sans-serif; color: #811622; margin-left: 4px; }
+  .top-meta {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #4A4A58;
+    letter-spacing: 2px; text-transform: uppercase;
+  }
+  .top-meta .price { color: #811622; font-weight: 500; margin-left: 14px; }
+  /* Center stack */
+  .center {
+    position: absolute; top: 50%; left: 60px; transform: translateY(-50%);
+    z-index: 2; max-width: 700px;
+  }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; color: #811622; letter-spacing: 4px;
+    text-transform: uppercase; margin-bottom: 22px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .eyebrow .pulse {
+    width: 7px; height: 7px; border-radius: 50%; background: #F58634;
+  }
+  h1.wordmark {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 144px; font-weight: 500; line-height: 1;
+    color: #1A1A24; margin: 0 0 4px; letter-spacing: -2px;
+  }
+  .dv-mark {
+    font-family: 'Noto Sans Devanagari', sans-serif;
+    font-size: 44px; color: #811622; font-weight: 500;
+    margin-bottom: 24px; letter-spacing: 1px;
+  }
+  .tagline {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 32px; font-weight: 400; font-style: italic;
+    color: #1A1A24; line-height: 1.2; margin: 0 0 18px;
+    max-width: 600px;
+  }
+  .tagline em { color: #811622; font-style: italic; }
+  .subline {
+    font-family: 'Outfit', sans-serif;
+    font-size: 17px; color: #4A4A58; font-weight: 300;
+    line-height: 1.55; max-width: 560px; margin: 0;
+  }
+  /* Sub-agent chip row at bottom */
+  .agents {
+    position: absolute; bottom: 42px; left: 60px; right: 60px;
+    display: flex; gap: 10px; flex-wrap: wrap;
+    z-index: 2;
+  }
+  .chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: #4A4A58;
+    padding: 7px 14px; background: rgba(129,22,34,0.05);
+    border: 1px solid #d4cbbb; border-radius: 3px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+  }
+  .chip.dv {
+    font-family: 'Noto Sans Devanagari', sans-serif;
+    color: #811622; font-weight: 500;
+    text-transform: none; letter-spacing: 0.5px;
+  }
+  /* Decorative seal — bottom right */
+  .seal {
+    position: absolute; bottom: 42px; right: 60px;
+    z-index: 2; text-align: right;
+  }
+  .seal .label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    letter-spacing: 3px; text-transform: uppercase; color: #8A8A96;
+  }
+  .seal .ai {
+    font-family: 'Playfair Display', serif; font-size: 18px;
+    color: #1A1A24; font-style: italic; margin-top: 2px;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="accent-top"></div>
+
+  <div class="watermark">
+    <div class="line">const सुरक्षा = audit(repo);    let चौकीदार = scan.secrets();    // सतर्कता: vigilance    await जासूस.probe(target);</div>
+    <div class="line">// पारदर्शिता: transparency    return विश्वास.verify();    const निरीक्षक = compliance.check();    // कोतवाल: city watchman</div>
+    <div class="line">const सुरक्षा = audit(repo);    let चौकीदार = scan.secrets();    // सतर्कता: vigilance    await जासूस.probe(target);</div>
+    <div class="line">// पारदर्शिता: transparency    return विश्वास.verify();    const निरीक्षक = compliance.check();    // कोतवाल: city watchman</div>
+    <div class="line">const सुरक्षा = audit(repo);    let चौकीदार = scan.secrets();    // सतर्कता: vigilance    await जासूस.probe(target);</div>
+    <div class="line">// पारदर्शिता: transparency    return विश्वास.verify();    const निरीक्षक = compliance.check();    // कोतवाल: city watchman</div>
+    <div class="line">const सुरक्षा = audit(repo);    let चौकीदार = scan.secrets();    // सतर्कता: vigilance    await जासूस.probe(target);</div>
+    <div class="line">// पारदर्शिता: transparency    return विश्वास.verify();    const निरीक्षक = compliance.check();    // कोतवाल: city watchman</div>
+    <div class="line">const सुरक्षा = audit(repo);    let चौकीदार = scan.secrets();    // सतर्कता: vigilance    await जासूस.probe(target);</div>
+    <div class="line">// पारदर्शिता: transparency    return विश्वास.verify();    const निरीक्षक = compliance.check();    // कोतवाल: city watchman</div>
+    <div class="line">const सुरक्षा = audit(repo);    let चौकीदार = scan.secrets();    // सतर्कता: vigilance    await जासूस.probe(target);</div>
+    <div class="line">// पारदर्शिता: transparency    return विश्वास.verify();    const निरीक्षक = compliance.check();    // कोतवाल: city watchman</div>
+  </div>
+
+  <div class="topbar">
+    <div class="brand-mark">
+      <div class="brand-dot"></div>
+      <div class="brand-text">kotwal<span class="dv">वाल</span></div>
+    </div>
+    <div class="top-meta">
+      kotwal.cloudsaathi.com<span class="price">· $29 launch</span>
+    </div>
+  </div>
+
+  <div class="center">
+    <div class="eyebrow"><span class="pulse"></span>AI security agent · Powered by Claude Code</div>
+    <h1 class="wordmark">Kotwal.</h1>
+    <div class="dv-mark">कोतवाल</div>
+    <p class="tagline">Your Claude Code subscription is now a <em>security team</em>.</p>
+    <p class="subline">Scans your code, pen-tests your live deployment, writes the fix as a PR. One CLI, six sub-agents, runs locally.</p>
+  </div>
+
+  <div class="agents">
+    <span class="chip">Chowkidar</span>
+    <span class="chip">Jasoos</span>
+    <span class="chip">Mukhbir</span>
+    <span class="chip">Darogha</span>
+    <span class="chip">Sipahi</span>
+    <span class="chip">Harkara</span>
+    <span class="chip dv">सतर्कता · पारदर्शिता · सुरक्षा</span>
+  </div>
+
+  <div class="seal">
+    <div class="label">audit · scan · fix</div>
+    <div class="ai">$29 · one-time</div>
+  </div>
+</div>
+</body>
+</html>

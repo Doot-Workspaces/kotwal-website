@@ -27,7 +27,7 @@ export const F = {
 
 export const SITE_URL = "https://kotwal.cloudsaathi.com";
 export const GITHUB_URL = "https://github.com/Doot-Workspaces/kotwal";
-export const GUMROAD_URL = "https://cloudsaathi.gumroad.com/l/kotwal";
+export const GUMROAD_URL = "https://dootwork.gumroad.com/l/kotwal";
 export const EMAIL_ADDRESS = "connect@cloudsaathi.com";
 export const PARENT_SITE = "https://cloudsaathi.com";
 

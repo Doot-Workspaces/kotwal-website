@@ -376,7 +376,7 @@ function Nav() {
             <Github size={16} />
           </a>
           <PrimaryBtn href={GUMROAD_URL}>
-            Buy $99 <ArrowRight size={13} />
+            Buy $29 <ArrowRight size={13} />
           </PrimaryBtn>
         </div>
       </div>
@@ -471,7 +471,7 @@ function Hero() {
         <Rv delay={0.18}>
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 28 }}>
             <PrimaryBtn href={GUMROAD_URL}>
-              Buy on Gumroad — $99 <ArrowRight size={13} />
+              Buy on Gumroad — $29 <ArrowRight size={13} />
             </PrimaryBtn>
             <GhostBtn href={SAMPLE_REPORT_URL} external={false}>
               <Download size={13} /> See a sample report
@@ -1188,9 +1188,10 @@ function Pricing() {
               color: C.orange,
               textTransform: "uppercase",
               marginBottom: 14,
+              textAlign: "center",
             }}
           >
-            Pricing
+            Launch pricing
           </p>
         </Rv>
         <Rv delay={0.05}>
@@ -1201,11 +1202,12 @@ function Pricing() {
               lineHeight: 1.15,
               color: C.bgW,
               fontWeight: 500,
-              margin: "0 0 14px",
+              margin: "0 auto 14px",
               maxWidth: 720,
+              textAlign: "center",
             }}
           >
-            One-time payment.{" "}
+            One price.{" "}
             <span style={{ fontStyle: "italic", color: C.orange }}>No subscription.</span>
           </h2>
         </Rv>
@@ -1216,51 +1218,32 @@ function Pricing() {
               fontSize: 16,
               color: "rgba(245,241,232,0.6)",
               fontWeight: 300,
-              maxWidth: 600,
+              maxWidth: 560,
               lineHeight: 1.6,
-              margin: "0 0 56px",
+              margin: "0 auto 56px",
+              textAlign: "center",
             }}
           >
-            Pay once. Run unlimited audits on your own laptop. Your code never leaves
-            your machine. The AI layer uses your existing Claude Code subscription.
+            Pay once. Run unlimited audits on your laptop. Your code never leaves your
+            machine. The AI layer uses your existing Claude Code subscription.
           </p>
         </Rv>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: 20,
-          }}
-        >
+        <div style={{ maxWidth: 460, margin: "0 auto" }}>
           <PriceCard
             tier="Standard"
             dv="मानक"
-            price="99"
-            note="One-time payment"
+            price="29"
+            note="Launch price · one-time"
             features={[
-              "All 6 sub-agents",
-              "Unlimited audits",
-              "AI triage + remediation (uses your Claude Code)",
-              "DOCX, HTML, Markdown reports",
-              "Email + PR delivery",
-              "Updates for 12 months",
+              "All 6 sub-agents — Chowkidar, Jasoos, Mukhbir, Darogha, Sipahi, Harkara",
+              "Unlimited audits, runs locally on your laptop",
+              "AI triage + remediation (uses your Claude Code subscription)",
+              "DOCX, HTML, Markdown, JSON reports",
+              "Auto-PR with the fix code in your repo",
+              "Lifetime updates — every release, free",
             ]}
             cta="Buy on Gumroad"
-          />
-          <PriceCard
-            tier="Lifetime"
-            dv="आजीवन"
-            price="199"
-            note="One-time · lifetime updates"
-            features={[
-              "Everything in Standard",
-              "Lifetime updates — every release, free",
-              "New sub-agents as they ship",
-              "Priority email support",
-              "Early access to deep-review mode",
-            ]}
-            cta="Buy Lifetime"
             highlighted
           />
         </div>
@@ -1420,8 +1403,8 @@ function FAQ() {
       a: "No. Auto-fix is opt-in (--remediate flag). Emails are saved as drafts you preview in a browser before approving with `kotwal send-vapt-email`. Nothing is sent or merged without an explicit y/N from you.",
     },
     {
-      q: "What's the difference between $99 and $199?",
-      a: "Standard ($99) gets you everything — all six sub-agents, unlimited audits, 12 months of updates. Lifetime ($199) replaces 12 months with lifetime updates, plus priority support and early access to deep-review mode as new sub-agents ship.",
+      q: "Why is it $29? Is this really one-time?",
+      a: "Yes — $29 is launch pricing while we get the first hundred customers. After that it goes up. Pay once, get every future release free. No subscription, no usage limits, no hidden tiers.",
     },
     {
       q: "Who's behind Kotwal?",
@@ -1570,15 +1553,15 @@ function FinalCTA() {
               margin: "0 0 32px",
             }}
           >
-            One-time $99. No subscription. Your data stays on your laptop. Your Claude
-            Code subscription powers the AI. Refund if it doesn't pay for itself in 30
-            days.
+            One-time $29 launch price. No subscription. Your data stays on your laptop.
+            Your Claude Code subscription powers the AI. Refund if it doesn't pay for
+            itself in 30 days.
           </p>
         </Rv>
         <Rv delay={0.16}>
           <div style={{ display: "inline-flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
             <PrimaryBtn href={GUMROAD_URL}>
-              <Terminal size={13} /> Buy Kotwal — $99
+              <Terminal size={13} /> Buy Kotwal — $29
             </PrimaryBtn>
             <GhostBtn href={GITHUB_URL}>
               <Github size={13} /> See on GitHub

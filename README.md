@@ -95,3 +95,6 @@ the fallback so real 404s recover quickly).
 - [ ] Add `og-image.png` (1200×630) to `/public/`
 - [ ] Wire DNS for `kotwal.cloudsaathi.com`
 - [ ] Add Plausible/Umami analytics (optional — keeps the page tracker-light)
+
+
+<!-- Security scan triggered at 2026-08-31 16:59:37 -->

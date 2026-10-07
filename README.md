@@ -120,3 +120,5 @@ the fallback so real 404s recover quickly).
 <!-- Security scan triggered at 2026-09-10 04:26:07 -->
 
 <!-- Security scan triggered at 2026-09-11 07:35:17 -->
+
+<!-- Security scan triggered at 2026-10-07 11:26:47 -->
